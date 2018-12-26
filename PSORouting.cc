@@ -197,49 +197,75 @@ void PSORouting::fromMacLayer(cPacket *pkt, int srcMacAddress, double RSSI, doub
 							}
 						}
 
-						int index = -1;
-						for (int i=0; i<nodes.size(); i++){
-							if (nodes[i].id == atoi(netPacket->getSource())){
-								index = i;
-								break;
+						if(atoi(netPacket->getSource()) < 26){
+							int index = -1;
+							for (int i=0; i<nodes.size(); i++){
+								if (nodes[i].id == atoi(netPacket->getSource())){
+									index = i;
+									break;
+								}
+							}
+							if (index == -1){
+								nodeCInfo temp;
+								temp.id = atoi(netPacket->getSource());
+
+								nodes.push_back(temp);
+
+								int i = nodes.size() - 1;
+								nodes[i].time = SIMTIME_DBL(simTime());
+								nodes[i].id = atoi(netPacket->getSource());
+								nodes[i].RE = netPacket->getRE();
+								nodes[i].selfLocation = netPacket->getCurrentLocation();
+								nodes[i].speed = netPacket->getSpeed();
+								nodes[i].trajectory = netPacket->getTraject();
+								nodes[i].selected = false;
+
+							} else{
+								nodes[index].time = SIMTIME_DBL(simTime());
+								nodes[index].id = atoi(netPacket->getSource());
+								nodes[index].RE = netPacket->getRE();
+								nodes[index].selfLocation = netPacket->getCurrentLocation();
+								nodes[index].speed = netPacket->getSpeed();
+								nodes[index].trajectory = netPacket->getTraject();
 							}
 						}
-						if (index == -1){
-							nodeCInfo temp;
-							temp.id = atoi(netPacket->getSource());
-
-							nodes.push_back(temp);
-							
-							int i = nodes.size() - 1;
-							nodes[i].time = SIMTIME_DBL(simTime());
-							nodes[i].id = atoi(netPacket->getSource());
-							nodes[i].RE = netPacket->getRE();
-							nodes[i].selfLocation = netPacket->getCurrentLocation();
-							nodes[i].speed = netPacket->getSpeed();
-							nodes[i].trajectory = netPacket->getTraject();
-							nodes[i].selected = false;
-
-							if(nodes[i].id >= 26 && nodes[i].id <= 29){
-								nodes[i].independent = true;
-								iNodes.push_back(nodes[i]);
+						else{
+							int index = -1;
+							for (int i=0; i<iNodes.size(); i++){
+								if (iNodes[i].id == atoi(netPacket->getSource())){
+									index = i;
+									break;
+								}
 							}
+							if (index == -1){
+								nodeCInfo temp;
+								temp.id = atoi(netPacket->getSource());
 
-						} else{
-							nodes[index].time = SIMTIME_DBL(simTime());
-							nodes[index].id = atoi(netPacket->getSource());
-							nodes[index].RE = netPacket->getRE();
-							nodes[index].selfLocation = netPacket->getCurrentLocation();
-							nodes[index].speed = netPacket->getSpeed();
-							nodes[index].trajectory = netPacket->getTraject();
+								iNodes.push_back(temp);
+
+								int i = iNodes.size() - 1;
+								iNodes[i].time = SIMTIME_DBL(simTime());
+								iNodes[i].id = atoi(netPacket->getSource());
+								iNodes[i].RE = netPacket->getRE();
+								iNodes[i].selfLocation = netPacket->getCurrentLocation();
+								iNodes[i].speed = netPacket->getSpeed();
+								iNodes[i].trajectory = netPacket->getTraject();
+								iNodes[i].selected = false;
+
+							} else{
+								iNodes[index].time = SIMTIME_DBL(simTime());
+								iNodes[index].id = atoi(netPacket->getSource());
+								iNodes[index].RE = netPacket->getRE();
+								iNodes[index].selfLocation = netPacket->getCurrentLocation();
+								iNodes[index].speed = netPacket->getSpeed();
+								iNodes[index].trajectory = netPacket->getTraject();
+							}
 						}
 
+						// trace() << "NODES.SIZE: " << nodes.size();
+						// trace() << "INODES.SIZE: " << iNodes.size();
 
-						trace() << iNodes.size();
-						for (int i = 0; i < iNodes.size(); ++i)
-						{
-							trace() << i << " " << iNodes[i].id << " independent node list";
-						}
-						//  Added by Tulio
+						// Added by Tulio
 						Sdfanet sdfanet = Sdfanet();
 
 						// How to calling topology
