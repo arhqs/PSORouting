@@ -106,6 +106,7 @@ struct nodeCInfo{
 	int trajectory;
 	PSOLocationInfo selfLocation;
 	bool selected;
+	bool independent;
 };
 
 struct eventInfo{
@@ -136,6 +137,10 @@ class PSORouting : public VirtualRouting {
 	double timeToMoveMax;
 	double minEnergy;
 
+//	added by pedro
+	bool independentNode;
+//	end
+
 	//to LinGO protocol
 	VirtualMobilityManager* mobilityModule;
 	VirtualMobilityManager* sinkMobilityModule;
@@ -154,7 +159,13 @@ class PSORouting : public VirtualRouting {
 	PSOLocationInfo idealLocation;
 	vector <pktList> buffer;
 	vector <routeCInfo> route;
+
 	vector <nodeCInfo> nodes;
+
+//	added by pedro
+	vector <nodeCInfo> iNodes;
+//	end
+
 	vector <replacementInfo> replaceList;
 	vector <eventInfo> eventList;
 	vector <controllerInfo> controllerList;

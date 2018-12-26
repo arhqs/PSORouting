@@ -28,23 +28,17 @@ void PSORouting::startup() {
 	timeToMoveMax = par("timeToMoveMax").doubleValue();
 	minEnergy = par("minEnergy").doubleValue();
 
-	//  Added by Tulio
-    Sdfanet sdfanet = Sdfanet();
+//	added by pedro
+	independentNode = par("isIndependent").boolValue();
+//	end
 
- // How to calling topology
-//  1st: controller
-//  2nd: lista de nós independentes
-//  3rd: lista de nós relays
-    topology_info_t topology = sdfanet.computeTopology(controllerList.at(0), nodes, nodes);
-
-    //  END added by Tulio
 
 	string s = ev.getConfig()->getConfigValue("sim-time-limit");
 	s = s.erase(s.find('s'));
-   	double sim_time_limit = atof(s.c_str());
+	double sim_time_limit = atof(s.c_str());
 
 	wirelessModule = check_and_cast <WirelessChannel*>(getParentModule()->getParentModule()->getParentModule()->getSubmodule("wirelessChannel"));
-	trace() << getParentModule()->getParentModule()->getParentModule();
+	// trace() << getParentModule()->getParentModule()->getParentModule();
 	mobilityModule = check_and_cast <VirtualMobilityManager*>(getParentModule()->getParentModule()->getSubmodule("MobilityManager"));
 	location = mobilityModule->getLocation();
 	self = getParentModule()->getParentModule()->getIndex();
@@ -118,7 +112,7 @@ void PSORouting::fromApplicationLayer(cPacket *pkt, const char *dstAddr){
 //    fromMacLayer
 //================================================================
 void PSORouting::fromMacLayer(cPacket *pkt, int srcMacAddress, double RSSI, double LQI){
-    switch (pkt->getKind()) {
+	switch (pkt->getKind()) {
 		case NETWORK_LAYER_PACKET:{
 			PSORoutingPacket *netPacket = dynamic_cast <PSORoutingPacket*>(pkt);
 			if (!netPacket)
@@ -128,43 +122,45 @@ void PSORouting::fromMacLayer(cPacket *pkt, int srcMacAddress, double RSSI, doub
 					if (self == atoi(netPacket->getDestination())){
 						DNreceivedPkt(pkt);
 					} else
-						RNreceivedPktBackbone(netPacket);
+					RNreceivedPktBackbone(netPacket);
 					break;
 				}
 				case PSO_ADV_MSG:{
 					if (self == atoi(controllerAddress.c_str())){
-						trace() << "Conroller received an adv msg from F_" << netPacket->getSource() << " with RE " << netPacket->getRE() << " J (" << netPacket->getRE()/getInitialEnergy() << " %), located at (" << netPacket->getCurrentLocation().x << "," << netPacket->getCurrentLocation().y << ") moving at " << netPacket->getSpeed() << "m/s\n";
+
+						// trace() << "Conroller received an adv msg from F_" << netPacket->getSource() << " with RE " << netPacket->getRE() << " J (" << netPacket->getRE()/getInitialEnergy() << " %), located at (" << netPacket->getCurrentLocation().x << "," << netPacket->getCurrentLocation().y << ") moving at " << netPacket->getSpeed() << "m/s\n";
 						
 						int value = -1;
-						for (int i=1; i<route.size(); i++){
-							if (atoi(netPacket->getSource()) == route[i].nodeId){
-								value = i;
-								break;
-							}
-						}
-						if (value != -1 ){
-							double REt = netPacket->getRE()/getInitialEnergy();
-							trace() << "ORIGEM ESTÁ NA TABELA DE ROTA";
-							trace() << "Conroller received an adv msg from F_" << netPacket->getSource() << " with RE " << netPacket->getRE() << " J (" << REt << " %), located at (" << netPacket->getCurrentLocation().x << "," << netPacket->getCurrentLocation().y << ") moving at " << netPacket->getSpeed() << "m/s";
-							if (REt < minEnergy && route[value].replace == false){
-								nodeReplacement(value, atoi(netPacket->getSource()));
-							}
-						}
+						// for (int i=1; i<route.size(); i++){
+						// 	if (atoi(netPacket->getSource()) == route[i].nodeId){
+						// 		value = i;
+						// 		break;
+						// 	}
+						// }
+						// if (value != -1 ){
+						// 	double REt = netPacket->getRE()/getInitialEnergy();
+						// 	trace() << "ORIGEM ESTÁ NA TABELA DE ROTA";
+						// 	trace() << "Conroller received an adv msg from F_" << netPacket->getSource() << " with RE " << netPacket->getRE() << " J (" << REt << " %), located at (" << netPacket->getCurrentLocation().x << "," << netPacket->getCurrentLocation().y << ") moving at " << netPacket->getSpeed() << "m/s";
+						// 	if (REt < minEnergy && route[value].replace == false){
+						// 		nodeReplacement(value, atoi(netPacket->getSource()));
+						// 	}
+						// }
 
-						value = -1;
+						// value = -1;
 						for (int i=0; i<replaceList.size(); i++){
 							if (atoi(netPacket->getSource()) == replaceList[i].nodeId){
 								value = i;
 								break;
 							}
 						}
+
 						if (value != -1 ){
 							double REt = netPacket->getRE()/getInitialEnergy();
-							trace() << "Conroller received an adv msg from R_" << netPacket->getSource() << " with RE " << netPacket->getRE() << " J (" << REt << " %), located at (" << netPacket->getCurrentLocation().x << "," << netPacket->getCurrentLocation().y << ") moving at " << netPacket->getSpeed() << "m/s";
+							// trace() << "Conroller received an adv msg from R_" << netPacket->getSource() << " with RE " << netPacket->getRE() << " J (" << REt << " %), located at (" << netPacket->getCurrentLocation().x << "," << netPacket->getCurrentLocation().y << ") moving at " << netPacket->getSpeed() << "m/s";
 							double distance = computeDistance(replaceList[value].location, netPacket->getCurrentLocation());
-							trace() << "dist " << distance;
+							// trace() << "dist " << distance;
 							if (distance < 15){
-								trace() << "update routing table line number " << replaceList[value].line;
+								// trace() << "update routing table line number " << replaceList[value].line;
 								int routeId = replaceList[value].line;
 								route[routeId].nodeId = replaceList[value].nodeId;
 								route[routeId-1].nextHop = replaceList[value].nodeId;
@@ -194,7 +190,7 @@ void PSORouting::fromMacLayer(cPacket *pkt, int srcMacAddress, double RSSI, doub
 									advMsg->setSourceRoute(route[i].source);
 									advMsg->setReplacement(false);
 									toMacLayer(advMsg, resolveNetworkAddress(advMsg->getDestination()));
-									trace() << "C_" << self << " is sending a msg to node " << advMsg->getDestination() << " with next-hop " << advMsg->getNextHopRoute() << " to move to (" << advMsg->getIdealLocation().x << ", " << advMsg->getIdealLocation().y << ")";
+									// trace() << "C_" << self << " is sending a msg to node " << advMsg->getDestination() << " with next-hop " << advMsg->getNextHopRoute() << " to move to (" << advMsg->getIdealLocation().x << ", " << advMsg->getIdealLocation().y << ")";
 								}
 								setTimer(PSO_CHECKACK, 0.1);
 								replaceList.clear();
@@ -211,7 +207,9 @@ void PSORouting::fromMacLayer(cPacket *pkt, int srcMacAddress, double RSSI, doub
 						if (index == -1){
 							nodeCInfo temp;
 							temp.id = atoi(netPacket->getSource());
+
 							nodes.push_back(temp);
+							
 							int i = nodes.size() - 1;
 							nodes[i].time = SIMTIME_DBL(simTime());
 							nodes[i].id = atoi(netPacket->getSource());
@@ -221,14 +219,46 @@ void PSORouting::fromMacLayer(cPacket *pkt, int srcMacAddress, double RSSI, doub
 							nodes[i].trajectory = netPacket->getTraject();
 							nodes[i].selected = false;
 
+							if(nodes[i].id >= 26 && nodes[i].id <= 29){
+								nodes[i].independent = true;
+								iNodes.push_back(nodes[i]);
+							}
+
 						} else{
 							nodes[index].time = SIMTIME_DBL(simTime());
 							nodes[index].id = atoi(netPacket->getSource());
-							nodes[index].RE= netPacket->getRE();
+							nodes[index].RE = netPacket->getRE();
 							nodes[index].selfLocation = netPacket->getCurrentLocation();
 							nodes[index].speed = netPacket->getSpeed();
 							nodes[index].trajectory = netPacket->getTraject();
 						}
+
+
+						trace() << iNodes.size();
+						for (int i = 0; i < iNodes.size(); ++i)
+						{
+							trace() << i << " " << iNodes[i].id << " independent node list";
+						}
+						//  Added by Tulio
+						Sdfanet sdfanet = Sdfanet();
+
+						// How to calling topology
+						//  1st: controller
+						//  2nd: lista de nós independentes
+						//  3rd: lista de nós relays
+						topology_info_t topology = sdfanet.computeTopology(controllerList.at(0), iNodes, nodes);
+						//  END added by Tulio
+
+
+
+
+
+
+
+
+
+
+
 					} else {
 						PSORoutingPacket *dupPacket = netPacket->dup();
 						dupPacket->setNextHop(controllerAddress.c_str());
@@ -365,7 +395,7 @@ void PSORouting::fromMacLayer(cPacket *pkt, int srcMacAddress, double RSSI, doub
 						} else{
 							// trace() << "Node " << self << " received an msg from controller to become RN";
 						}
-					
+
 						if (route.size() == 0){
 							routeCInfo temp;
 							temp.nodeId = atoi(netPacket->getDestination());
@@ -508,8 +538,8 @@ void PSORouting::timerFiredCallback(int index){
 					energy = check_and_cast <ResourceManager*>(getParentModule()->getParentModule()->getParentModule()->getSubmodule("node",i)->getSubmodule("ResourceManager"));
 					if(energy->getRemainingEnergy() > 0){
 						output() << i << "\t" 
-							 << time << "\t" 
-							 << energy->getRemainingEnergy()/energy->getInitialEnergy();
+						<< time << "\t" 
+						<< energy->getRemainingEnergy()/energy->getInitialEnergy();
 					}
 				}
 			}
@@ -523,19 +553,19 @@ void PSORouting::timerFiredCallback(int index){
 				output() << "time\tidVideo\tidSrc\trecPkts\thops";
 				for (int i=0; i< videoStatistics.size(); i++){
 					output() << videoStatistics[i].time << "\t" 
-						 << videoStatistics[i].videoId << "\t" 
-						 << videoStatistics[i].nodeId << "\t" 
-						 << videoStatistics[i].nRecPkts << "\t" 
-						 << (double) videoStatistics[i].hopSum / videoStatistics[i].nRecPkts;
+					<< videoStatistics[i].videoId << "\t" 
+					<< videoStatistics[i].nodeId << "\t" 
+					<< videoStatistics[i].nRecPkts << "\t" 
+					<< (double) videoStatistics[i].hopSum / videoStatistics[i].nRecPkts;
 				}
 			} else if (videoStatistics.size() > 0){
 				output() << "\nStatistics per node";
 				output() << "self\tidVideo\tidSrc\troutes";
 				for (int i=0; i<videoStatistics.size(); i++){
 					output() << self << "\t" 
-						 << videoStatistics[i].videoId << "\t" 
-						 << videoStatistics[i].nodeId << "\t" 
-						 << videoStatistics[i].hopSum;
+					<< videoStatistics[i].videoId << "\t" 
+					<< videoStatistics[i].nodeId << "\t" 
+					<< videoStatistics[i].hopSum;
 				}
 			}
 			break;
@@ -543,7 +573,7 @@ void PSORouting::timerFiredCallback(int index){
 		case PSO_SEND_BEACON:{
 			sendAdv();
 			setTimer(PSO_SEND_BEACON,beaconInterval);
-            		break;
+			break;
 		}
 		case PSO_DECISION:{
 			trace() << "PSO_DECISION";
@@ -561,7 +591,7 @@ void PSORouting::timerFiredCallback(int index){
 			break;
 		}
 		case PSO_DECISIONRN:{
-			 selectRelay();
+			selectRelay();
 			break;
 		}
 		case PSO_UPDATE_ROUTE:{
@@ -664,7 +694,7 @@ void PSORouting::timerFiredCallback(int index){
 			if (needAck)
 				setTimer(PSO_CHECKACK, 0.1);
 			else
-		break;
+				break;
 		}
 	}
 }
@@ -776,7 +806,7 @@ void PSORouting::selectRelay(){
 	int index;
 	PSOLocationInfo idealLocation = computeIdealLocation();
 
-    	for (int i=0; i<nodes.size(); i++){
+	for (int i=0; i<nodes.size(); i++){
 		//TODO: Média para verificar o melhor node para ser o nó fonte.
 		double distance = computeDistance(idealLocation, nodes[i].selfLocation);
 		double timeToMove;
@@ -1073,7 +1103,7 @@ void PSORouting::RNreceivedPktBackbone(PSORoutingPacket *netPacket){
 			statisticIdSource = atoi(dupPacket->getSource());
 			statisticQtdPkts = 1;
 			print = false;
-			trace() << statisticIdVideo << "\t" << statisticIdSource << "\t" << self << "\t" << statisticNext << "\t" << statisticFistPkt << "\t" << statisticLastPkt << "\t" << statisticQtdPkts << "\t" << statisticDuration;
+			// trace() << statisticIdVideo << "\t" << statisticIdSource << "\t" << self << "\t" << statisticNext << "\t" << statisticFistPkt << "\t" << statisticLastPkt << "\t" << statisticQtdPkts << "\t" << statisticDuration;
 			//TODO: tempo de rota
 		}
 	}
@@ -1141,7 +1171,7 @@ void PSORouting::DNreceivedPkt(cPacket *pkt){
 			}else {
 				if (route[index].lastReceivedPacket < netPacket->getSequenceNumber()){
 					if ( delay > macModule->getDelayMax()){ //drop due to packet deadline
-						trace() << "Drop packet - Delay (" << delay << ")higher than the playout deadline(" << macModule->getDelayMax() << ")";
+						// trace() << "Drop packet - Delay (" << delay << ")higher than the playout deadline(" << macModule->getDelayMax() << ")";
 						//statistics(atoi(netPacket->getSource()), atoi(netPacket->getDestinationLinGO()), netPacket->getIdVideo(), netPacket->getHopCount() + 1, 0,  XLINGOTC_STATISTICS_DROP_DELAY);
 					} else { //buffer the packet
 						pktList temp;
@@ -1150,18 +1180,18 @@ void PSORouting::DNreceivedPkt(cPacket *pkt){
 						buffer.push_back(temp);
 						statistics(atoi(netPacket->getSource()), atoi(netPacket->getDestination()), netPacket->getIdVideo(), netPacket->getHopCount() + 1, 0,  PSO_STATISTICS_RECEIVED_PACKET);
 						setMultipleTimer(PSO_CLEAN_BUFFER, atoi(netPacket->getSource()), 1);
-						trace() << "Buffered pkt number " << netPacket->getSequenceNumber() << " buffer state: " << buffer.size() << "/" << netBufferSize;
+						// trace() << "Buffered pkt number " << netPacket->getSequenceNumber() << " buffer state: " << buffer.size() << "/" << netBufferSize;
 					}
 				}  else{
-					trace() << "Drop packet number " << netPacket->getSequenceNumber() << ", due to it is old. Last Packet sent to App Layer";
-					trace() << "last rec pkt " << route[index].lastReceivedPacket << " for source " << route[index].source;
+					// trace() << "Drop packet number " << netPacket->getSequenceNumber() << ", due to it is old. Last Packet sent to App Layer";
+					// trace() << "last rec pkt " << route[index].lastReceivedPacket << " for source " << route[index].source;
 					//statistics(atoi(netPacket->getSource()), atoi(netPacket->getDestinationLinGO()), netPacket->getIdVideo(), 0, 0, XLINGOTC_STATISTICS_DROP_NTW);
 				}
 				if (buffer.size() == netBufferSize){ //send bufferede packets to application layer
 					sort(buffer.begin(), buffer.end(), PSO_sort_buffer);
 					while(buffer.size() > (netBufferSize/2.0)){
 						PSORoutingPacket *packet = dynamic_cast <PSORoutingPacket*>(buffer[0].bufferPkt.front());
-						trace() << "Send pkt number " << buffer[0].seqNumber << " to application from source " << packet->getSource();
+						// trace() << "Send pkt number " << buffer[0].seqNumber << " to application from source " << packet->getSource();
 						//int tmpIndex = getNextHopIndex(packet->getSource(), netPacket->getDestination());
 						int tmpIndex = index;
 						toApplicationLayer(decapsulatePacket(buffer[0].bufferPkt.front()));
@@ -1174,7 +1204,7 @@ void PSORouting::DNreceivedPkt(cPacket *pkt){
 						for (int i=0; i<buffer.size(); i++){
 							PSORoutingPacket *packet = dynamic_cast <PSORoutingPacket*>(buffer[i].bufferPkt.front());
 							if (atoi(packet->getSource()) == atoi(netPacket->getSource()) && buffer[i].seqNumber == route[index].lastReceivedPacket + 1){
-								trace() << "Send pkt number " << buffer[i].seqNumber << " to application from source " << packet->getSource();
+								// trace() << "Send pkt number " << buffer[i].seqNumber << " to application from source " << packet->getSource();
 								toApplicationLayer(decapsulatePacket(buffer[i].bufferPkt.front()));
 								//int tmpIndex = getNextHopIndex(packet->getSource(), netPacket->getDestination());
 								int tmpIndex = index;
@@ -1193,11 +1223,11 @@ void PSORouting::DNreceivedPkt(cPacket *pkt){
 
 	} else if (!notDuplicate){
 		///statistics(atoi(netPacket->getSource()), atoi(netPacket->getDestinationLinGO()), netPacket->getIdVideo(), netPacket->getHopCount() + 1, 0,  XLINGOTC_STATISTICS_DUPLICATED_PACKET);
-		trace() << "DN received a duplicated packet";
+		// trace() << "DN received a duplicated packet";
 	}
-	trace() << "Routing buffer state: " << buffer.size() << "/" << netBufferSize;
-	trace() << "MAC control buffer state: " << macModule->getControlBufferSize() << "/" << macModule->macBufferSize;
-	trace() << "MAC buffer state: " << macModule->getBufferSize() << "/" << macModule->macBufferSize << "\n";
+	// trace() << "Routing buffer state: " << buffer.size() << "/" << netBufferSize;
+	// trace() << "MAC control buffer state: " << macModule->getControlBufferSize() << "/" << macModule->macBufferSize;
+	// trace() << "MAC buffer state: " << macModule->getBufferSize() << "/" << macModule->macBufferSize << "\n";
 }
 
 //================================================================
@@ -1286,8 +1316,8 @@ PSOLocationInfo PSORouting::computeIdealLocation(){
 	idealLocation.y = idealLastHopLocation.y - coordenatey;
 	if (idealLocation.y < 0)
 		idealLocation.y = 0;
-	trace() << "last location: (" << idealLastHopLocation.x << ", " << idealLastHopLocation.y << ")";
-	trace() << "ideal location: (" << idealLocation.x << ", " << idealLocation.y << ")";
+	// trace() << "last location: (" << idealLastHopLocation.x << ", " << idealLastHopLocation.y << ")";
+	// trace() << "ideal location: (" << idealLocation.x << ", " << idealLocation.y << ")";
 	return idealLocation;
 }
 

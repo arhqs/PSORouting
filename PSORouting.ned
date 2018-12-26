@@ -35,6 +35,7 @@ parameters:
 	double timeToMoveMax = default (10);
 	double minEnergy = default (0.2);
 	bool isSource = default (false);		//Used to known if the current node is source
+	bool isIndependent = default(false);	//Used to known if the current node is independent
 	
 gates: 
 	output toCommunicationModule;
