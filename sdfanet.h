@@ -13,7 +13,8 @@
 #include <iostream>
 #include "PSORouting.h"
 
-#define CONST_MAX_BUFFER 4098
+// #define CONST_MAX_BUFFER 4098
+#define CONST_MAX_BUFFER 262144
 
 using namespace std;
 

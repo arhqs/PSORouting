@@ -197,7 +197,7 @@ void PSORouting::fromMacLayer(cPacket *pkt, int srcMacAddress, double RSSI, doub
 							}
 						}
 
-						if(atoi(netPacket->getSource()) < 26){
+						if(atoi(netPacket->getSource()) < 10){
 							int index = -1;
 							for (int i=0; i<nodes.size(); i++){
 								if (nodes[i].id == atoi(netPacket->getSource())){
@@ -262,18 +262,28 @@ void PSORouting::fromMacLayer(cPacket *pkt, int srcMacAddress, double RSSI, doub
 							}
 						}
 
-						// trace() << "NODES.SIZE: " << nodes.size();
-						// trace() << "INODES.SIZE: " << iNodes.size();
+						trace() << "NODES.SIZE: " << nodes.size();
+						trace() << "INODES.SIZE: " << iNodes.size();
+						trace() << "controllerList.size: " << controllerList.size();
+						
+						if(nodes.size() > 1 && iNodes.size() >= 1){
+							// Added by Tulio
+							Sdfanet sdfanet = Sdfanet();
+							
 
-						// Added by Tulio
-						Sdfanet sdfanet = Sdfanet();
+							// How to calling topology
+							//  1st: controller
+							//  2nd: lista de nós independentes
+							//  3rd: lista de nós relays
+							topology_info_t topology = sdfanet.computeTopology(controllerList.at(0), iNodes, nodes);
+							
 
-						// How to calling topology
-						//  1st: controller
-						//  2nd: lista de nós independentes
-						//  3rd: lista de nós relays
-						topology_info_t topology = sdfanet.computeTopology(controllerList.at(0), iNodes, nodes);
-						//  END added by Tulio
+
+							//  END added by Tulio
+
+						}
+
+						
 
 
 

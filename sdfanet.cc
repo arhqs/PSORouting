@@ -73,10 +73,15 @@ topology_info_t Sdfanet::computeTopology(controllerInfo controllerNode, nodes_t 
 
     string message = getStdFromInfo(controllerNode, relayNodes, independentNodes);
 
+    printf("message: %s",message.c_str());
+
     this->send(message.c_str());
+
+//    printf("message.size() %d",message.size());
 
     this->receive(buffer);
 
+//    cout << buffer << endl;
     topology_info_t topology = getTopologyFromStd(controllerNode, relayNodes, buffer);
 
     this->send("ack");
