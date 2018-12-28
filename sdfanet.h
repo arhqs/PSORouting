@@ -11,10 +11,10 @@
 #include <netdb.h>
 
 #include <iostream>
-#include "PSORouting.h"
+#include "PSOvariables.h"
 
 // #define CONST_MAX_BUFFER 4098
-#define CONST_MAX_BUFFER 262144
+#define CONST_MAX_BUFFER 8192
 
 using namespace std;
 
@@ -38,6 +38,7 @@ private:
     void receive(char *msg);
 public:
     Sdfanet();
+    void connectMain();
     topology_info_t computeTopology(controllerInfo controllerNode, nodes_t independentNodes, nodes_t relayNodes);
 };
 

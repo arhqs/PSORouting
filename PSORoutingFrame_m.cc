@@ -271,6 +271,223 @@ void *PSOLocationInfoDescriptor::getFieldStructPointer(void *object, int field, 
     }
 }
 
+PSORoute::PSORoute()
+{
+    selfId = 0;
+    destination = 0;
+    nextHop = 0;
+}
+
+void doPacking(cCommBuffer *b, PSORoute& a)
+{
+    doPacking(b,a.selfId);
+    doPacking(b,a.destination);
+    doPacking(b,a.nextHop);
+}
+
+void doUnpacking(cCommBuffer *b, PSORoute& a)
+{
+    doUnpacking(b,a.selfId);
+    doUnpacking(b,a.destination);
+    doUnpacking(b,a.nextHop);
+}
+
+class PSORouteDescriptor : public cClassDescriptor
+{
+  public:
+    PSORouteDescriptor();
+    virtual ~PSORouteDescriptor();
+
+    virtual bool doesSupport(cObject *obj) const;
+    virtual const char *getProperty(const char *propertyname) const;
+    virtual int getFieldCount(void *object) const;
+    virtual const char *getFieldName(void *object, int field) const;
+    virtual int findField(void *object, const char *fieldName) const;
+    virtual unsigned int getFieldTypeFlags(void *object, int field) const;
+    virtual const char *getFieldTypeString(void *object, int field) const;
+    virtual const char *getFieldProperty(void *object, int field, const char *propertyname) const;
+    virtual int getArraySize(void *object, int field) const;
+
+    virtual std::string getFieldAsString(void *object, int field, int i) const;
+    virtual bool setFieldAsString(void *object, int field, int i, const char *value) const;
+
+    virtual const char *getFieldStructName(void *object, int field) const;
+    virtual void *getFieldStructPointer(void *object, int field, int i) const;
+};
+
+Register_ClassDescriptor(PSORouteDescriptor);
+
+PSORouteDescriptor::PSORouteDescriptor() : cClassDescriptor("PSORoute", "")
+{
+}
+
+PSORouteDescriptor::~PSORouteDescriptor()
+{
+}
+
+bool PSORouteDescriptor::doesSupport(cObject *obj) const
+{
+    return dynamic_cast<PSORoute *>(obj)!=NULL;
+}
+
+const char *PSORouteDescriptor::getProperty(const char *propertyname) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    return basedesc ? basedesc->getProperty(propertyname) : NULL;
+}
+
+int PSORouteDescriptor::getFieldCount(void *object) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    return basedesc ? 3+basedesc->getFieldCount(object) : 3;
+}
+
+unsigned int PSORouteDescriptor::getFieldTypeFlags(void *object, int field) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount(object))
+            return basedesc->getFieldTypeFlags(object, field);
+        field -= basedesc->getFieldCount(object);
+    }
+    static unsigned int fieldTypeFlags[] = {
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
+    };
+    return (field>=0 && field<3) ? fieldTypeFlags[field] : 0;
+}
+
+const char *PSORouteDescriptor::getFieldName(void *object, int field) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount(object))
+            return basedesc->getFieldName(object, field);
+        field -= basedesc->getFieldCount(object);
+    }
+    static const char *fieldNames[] = {
+        "selfId",
+        "destination",
+        "nextHop",
+    };
+    return (field>=0 && field<3) ? fieldNames[field] : NULL;
+}
+
+int PSORouteDescriptor::findField(void *object, const char *fieldName) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    int base = basedesc ? basedesc->getFieldCount(object) : 0;
+    if (fieldName[0]=='s' && strcmp(fieldName, "selfId")==0) return base+0;
+    if (fieldName[0]=='d' && strcmp(fieldName, "destination")==0) return base+1;
+    if (fieldName[0]=='n' && strcmp(fieldName, "nextHop")==0) return base+2;
+    return basedesc ? basedesc->findField(object, fieldName) : -1;
+}
+
+const char *PSORouteDescriptor::getFieldTypeString(void *object, int field) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount(object))
+            return basedesc->getFieldTypeString(object, field);
+        field -= basedesc->getFieldCount(object);
+    }
+    static const char *fieldTypeStrings[] = {
+        "int",
+        "int",
+        "int",
+    };
+    return (field>=0 && field<3) ? fieldTypeStrings[field] : NULL;
+}
+
+const char *PSORouteDescriptor::getFieldProperty(void *object, int field, const char *propertyname) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount(object))
+            return basedesc->getFieldProperty(object, field, propertyname);
+        field -= basedesc->getFieldCount(object);
+    }
+    switch (field) {
+        default: return NULL;
+    }
+}
+
+int PSORouteDescriptor::getArraySize(void *object, int field) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount(object))
+            return basedesc->getArraySize(object, field);
+        field -= basedesc->getFieldCount(object);
+    }
+    PSORoute *pp = (PSORoute *)object; (void)pp;
+    switch (field) {
+        default: return 0;
+    }
+}
+
+std::string PSORouteDescriptor::getFieldAsString(void *object, int field, int i) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount(object))
+            return basedesc->getFieldAsString(object,field,i);
+        field -= basedesc->getFieldCount(object);
+    }
+    PSORoute *pp = (PSORoute *)object; (void)pp;
+    switch (field) {
+        case 0: return long2string(pp->selfId);
+        case 1: return long2string(pp->destination);
+        case 2: return long2string(pp->nextHop);
+        default: return "";
+    }
+}
+
+bool PSORouteDescriptor::setFieldAsString(void *object, int field, int i, const char *value) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount(object))
+            return basedesc->setFieldAsString(object,field,i,value);
+        field -= basedesc->getFieldCount(object);
+    }
+    PSORoute *pp = (PSORoute *)object; (void)pp;
+    switch (field) {
+        case 0: pp->selfId = string2long(value); return true;
+        case 1: pp->destination = string2long(value); return true;
+        case 2: pp->nextHop = string2long(value); return true;
+        default: return false;
+    }
+}
+
+const char *PSORouteDescriptor::getFieldStructName(void *object, int field) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount(object))
+            return basedesc->getFieldStructName(object, field);
+        field -= basedesc->getFieldCount(object);
+    }
+    switch (field) {
+        default: return NULL;
+    };
+}
+
+void *PSORouteDescriptor::getFieldStructPointer(void *object, int field, int i) const
+{
+    cClassDescriptor *basedesc = getBaseClassDescriptor();
+    if (basedesc) {
+        if (field < basedesc->getFieldCount(object))
+            return basedesc->getFieldStructPointer(object, field, i);
+        field -= basedesc->getFieldCount(object);
+    }
+    PSORoute *pp = (PSORoute *)object; (void)pp;
+    switch (field) {
+        default: return NULL;
+    }
+}
+
 Register_Class(PSORoutingPacket);
 
 PSORoutingPacket::PSORoutingPacket(const char *name, int kind) : ::RoutingPacket(name,kind)

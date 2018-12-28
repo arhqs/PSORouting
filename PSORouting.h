@@ -38,8 +38,10 @@
 #include "Radio.h"
 #include "VirtualMac.h"
 #include "VirtualRouting.h"
-#include "PSORoutingFrame_m.h"
 #include "VirtualMobilityManager.h"
+
+#include "PSOvariables.h"
+#include "sdfanet.h"
 
 using namespace std;
 
@@ -84,39 +86,11 @@ struct replacementInfo{
 	int lastReceivedPacket;
 };
 
-struct routeCInfo{
-	int nodeId;
-	int nextHop;
-	int source;
-	int destination;
-	PSOLocationInfo idealLocation;
-	PSOLocationInfo selfLocation;
-	bool ack;
-	bool replace;
-	int lastReceivedPacket;
-};
 
-struct nodeCInfo{
-	double RE;
-	double speed;
-	double avg;
-	double time;
-	double timeMove;
-	int id;
-	int trajectory;
-	PSOLocationInfo selfLocation;
-	bool selected;
-	bool independent;
-};
 
 struct eventInfo{
 	PSOLocationInfo eventLocation;
 	double time;
-};
-
-struct controllerInfo{
-	PSOLocationInfo controllerLocation;
-	int controllerId;
 };
 
 struct requestData{
@@ -137,9 +111,11 @@ class PSORouting : public VirtualRouting {
 	double timeToMoveMax;
 	double minEnergy;
 
-//	added by pedro
-	bool independentNode;
-//	end
+// //	added by pedro
+// 	bool independentNode;
+// //	end
+
+	Sdfanet sdfanet;
 
 	//to LinGO protocol
 	VirtualMobilityManager* mobilityModule;
@@ -163,7 +139,8 @@ class PSORouting : public VirtualRouting {
 	vector <nodeCInfo> nodes;
 
 //	added by pedro
-	vector <nodeCInfo> iNodes;
+	vector <nodeCInfo> inodes;
+	vector <nodeCInfo> rnodes;
 //	end
 
 	vector <replacementInfo> replaceList;
@@ -227,5 +204,6 @@ class PSORouting : public VirtualRouting {
 bool PSO_sort_buffer(pktList a, pktList b);
 bool PSO_sort_node(nodeCInfo a, nodeCInfo b);
 bool PSO_sort_time(nodeCInfo a, nodeCInfo b);
+bool PSO_sort_dist(nodeCInfo a, nodeCInfo b);
 
 #endif

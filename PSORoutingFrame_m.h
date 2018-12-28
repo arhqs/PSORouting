@@ -17,10 +17,21 @@
 
 // cplusplus {{
 #include "RoutingPacket_m.h"
+#include <cmath>
+#include <queue>
+#include <vector>
+#include <omnetpp.h>
+#include <algorithm>
+#include <pthread.h>
+#include <string>
+#include <stdlib.h>
+#include <stdio.h>
+#include <iostream>
+#include <sstream>
 // }}
 
 /**
- * Enum generated from <tt>src/node/communication/routing/PSO/PSORoutingFrame.msg:29</tt> by nedtool.
+ * Enum generated from <tt>src/node/communication/routing/PSO/PSORoutingFrame.msg:40</tt> by nedtool.
  * <pre>
  * enum PSORouting_FrameType
  * {
@@ -42,7 +53,7 @@ enum PSORouting_FrameType {
 };
 
 /**
- * Struct generated from src/node/communication/routing/PSO/PSORoutingFrame.msg:37 by nedtool.
+ * Struct generated from src/node/communication/routing/PSO/PSORoutingFrame.msg:48 by nedtool.
  */
 struct PSOLocationInfo
 {
@@ -55,7 +66,21 @@ void doPacking(cCommBuffer *b, PSOLocationInfo& a);
 void doUnpacking(cCommBuffer *b, PSOLocationInfo& a);
 
 /**
- * Class generated from <tt>src/node/communication/routing/PSO/PSORoutingFrame.msg:42</tt> by nedtool.
+ * Struct generated from src/node/communication/routing/PSO/PSORoutingFrame.msg:53 by nedtool.
+ */
+struct PSORoute
+{
+    PSORoute();
+    int selfId;
+    int destination;
+    int nextHop;
+};
+
+void doPacking(cCommBuffer *b, PSORoute& a);
+void doUnpacking(cCommBuffer *b, PSORoute& a);
+
+/**
+ * Class generated from <tt>src/node/communication/routing/PSO/PSORoutingFrame.msg:59</tt> by nedtool.
  * <pre>
  * packet PSORoutingPacket extends RoutingPacket
  * {
@@ -66,6 +91,9 @@ void doUnpacking(cCommBuffer *b, PSOLocationInfo& a);
  *     string nextHop;
  *     string nextHopRoute;
  *     int sourceRoute;
+ * 
+ * //	std::vector<PSORoute> routes;
+ * 
  *     double RE;
  *     double speed;
  *     int traject;

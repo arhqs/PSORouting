@@ -22,6 +22,17 @@
 
 cplusplus {{
 #include "RoutingPacket_m.h"
+#include <cmath>
+#include <queue>
+#include <vector>
+#include <omnetpp.h>
+#include <algorithm>
+#include <pthread.h>
+#include <string>
+#include <stdlib.h>
+#include <stdio.h>
+#include <iostream>
+#include <sstream>
 }}
 
 class RoutingPacket;
@@ -39,6 +50,12 @@ struct PSOLocationInfo{
 	double y;
 }
 
+struct PSORoute{
+    int selfId;
+    int destination;
+    int nextHop;
+}
+
 packet PSORoutingPacket extends RoutingPacket{	
 	int PSORoutingPacketKind enum (PSORouting_FrameType);
 	PSOLocationInfo currentLocation;
@@ -47,6 +64,9 @@ packet PSORoutingPacket extends RoutingPacket{
 	string nextHop;
 	string nextHopRoute;
 	int sourceRoute;
+	
+//	std::vector<PSORoute> routes;
+	
 	double RE;
 	double speed;
 	int traject;	
