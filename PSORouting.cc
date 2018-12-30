@@ -36,7 +36,7 @@ void PSORouting::startup() {
 
 
 // //	added by pedro
-// 	independentNode = par("isIndependent").boolValue();
+//	independentNode = par("isIndependent").boolValue();
 // //	end
 
 
@@ -136,170 +136,126 @@ void PSORouting::fromMacLayer(cPacket *pkt, int srcMacAddress, double RSSI, doub
 					if (self == atoi(controllerAddress.c_str())){
 
 						trace() << "Conroller received an adv msg from F_" << netPacket->getSource() << " with RE " << netPacket->getRE() << " J (" << netPacket->getRE()/getInitialEnergy() << " %), located at (" << netPacket->getCurrentLocation().x << "," << netPacket->getCurrentLocation().y << ") moving at " << netPacket->getSpeed() << "m/s\n";
-						
-						int value = -1;
 
-                        int indexN = -1;
-                        for (int i=0; i<nodes.size(); i++){
-                            if (nodes[i].id == atoi(netPacket->getSource())){
-                                indexN = i;
-                                break;
-                            }
-                        }
-                        int indexI = -1;
-                        for (int i=0; i<inodes.size(); i++){
-                            if (nodes[i].id == atoi(netPacket->getSource())){
-                                indexI = i;
-                                break;
-                            }
-                        }
-                        int indexR = -1;
-                        for (int i=0; i<rnodes.size(); i++){
-                            if (nodes[i].id == atoi(netPacket->getSource())){
-                                indexR = i;
-                                break;
-                            }
-                        }
-
-
-
-
-                        if (indexN == -1){
-                            nodeCInfo temp;
-
-                            temp.id = atoi(netPacket->getSource());
-                            temp.time = SIMTIME_DBL(simTime());
-                            temp.id = atoi(netPacket->getSource());
-                            temp.RE = netPacket->getRE();
-                            temp.selfLocation = netPacket->getCurrentLocation();
-                            temp.speed = netPacket->getSpeed();
-                            temp.trajectory = netPacket->getTraject();
-                            temp.selected = false;
-                            temp.distController = computeDistance(temp.selfLocation ,controllerList[0].controllerLocation);
-
-                            nodes.push_back(temp);
-
-                            if(atoi(netPacket->getSource()) < 7 && indexR == -1){
-                                temp.independent = false;
-                                rnodes.push_back(temp);
-                            }else if(indexI == -1){
-                                temp.independent = true;
-                                inodes.push_back(temp);
-                            }
-
-
-                        } else{
-                            nodes[indexN].distController = computeDistance(nodes[indexN].selfLocation ,controllerList[0].controllerLocation);
-                            nodes[indexN].time = SIMTIME_DBL(simTime());
-                            nodes[indexN].id = atoi(netPacket->getSource());
-                            nodes[indexN].RE = netPacket->getRE();
-                            nodes[indexN].selfLocation = netPacket->getCurrentLocation();
-                            nodes[indexN].speed = netPacket->getSpeed();
-                            nodes[indexN].trajectory = netPacket->getTraject();
-                        }
-
-//						sort(nodes.begin(), nodes.end(), PSO_sort_dist);
-						
-
-						if(rnodes.size() >= 6 && inodes.size() >= 4){
-						    cout << endl;
-                            cout << "NODES.SIZE: " << nodes.size() << endl;
-                            cout << "inodes.SIZE: " << inodes.size() << endl;
-                            cout << "rnodes.SIZE: " << rnodes.size() << endl;
-                            cout << endl;
-
-							cout << "NODES: ";
-							for (int i = 0; i < nodes.size(); ++i){
-								cout << nodes[i].id << " ";
+						int index = -1;
+						for (int i=0; i<nodes.size(); i++){
+							if (nodes[i].id == atoi(netPacket->getSource())){
+								index = i;
+								break;
 							}
-							cout << endl;
-							cout << "inodes: ";
-							for (int i = 0; i < inodes.size(); ++i){
-								cout << inodes[i].id << " ";
-							}
-							cout << endl;
-							cout << "rnodes: ";
-							for (int i = 0; i < rnodes.size(); ++i){
-								cout << rnodes[i].id << " ";
-							}
-							cout << endl;
-
-
-						    cout << "MONTANDO MSG 1" << endl;
-
-							topology_info_t topology = sdfanet.computeTopology(controllerList.at(0), inodes, rnodes);
-
-
-//							Atualizando tabela de rotas
-
-							cout << "MONTANDO MSG 2" << endl;
-//							route.clear();
-//
-//							cout << "MONTANDO MSG 3" << endl;
-//
-//							for (int i = 0; i < nodes.size(); ++i){
-//								for (int j = 0; j < topology.routes.size(); ++j){
-//									if(nodes[i].id == topology.routes[j].nodeId){
-//									    route.push_back(topology.routes[j]);
-//									}
-//								}
-//							}
-//
-//							for (int i = 0; i < route.size(); ++i){
-//								for (int j = 0; j < topology.relayNodes.size(); ++j){
-//									if(route[i].nodeId == topology.relayNodes[j].id){
-//									    route[i].idealLocation =  topology.relayNodes[j].selfLocation;
-//									}
-//								}
-//							}
-
-
-	                        // modificar location relay
-							// trace() << "update routing table line number " << replaceList[value].line;
-
-//
-
-//							for (int i=0; i <= route.size(); i++){
-//							    cout << "MONTANDO MSG" << endl;
-//								char buff[256];
-//								string sNodeID;
-//								sprintf(buff, "%i", route[i].nodeId);
-//								sNodeID.assign(buff);
-//								string sNextId;
-//								sprintf(buff, "%i", route[i].nextHop);
-//								sNextId.assign(buff);
-//								route[i].ack = false;
-//
-//								PSORoutingPacket *advMsg = new PSORoutingPacket("Node is sending an adv msg", NETWORK_LAYER_PACKET);
-//								advMsg->setByteLength(netDataFrameOverhead);
-//								advMsg->setPSORoutingPacketKind(PSO_RN_MSG);
-//								advMsg->setSource(SELF_NETWORK_ADDRESS);
-//								advMsg->setDestination(sNodeID.c_str());
-//								advMsg->setNextHop(sNodeID.c_str());
-//								advMsg->setNextHopRoute(sNextId.c_str());
-//								advMsg->setIdealLocation(route[i].idealLocation);
-//								advMsg->setSourceRoute(route[i].source);
-//								advMsg->setReplacement(false);
-//								toMacLayer(advMsg, resolveNetworkAddress(advMsg->getDestination()));
-//								trace() << "C_" << self << " is sending a msg to node " << advMsg->getDestination() << " with next-hop " << advMsg->getNextHopRoute() << " to move to (" << advMsg->getIdealLocation().x << ", " << advMsg->getIdealLocation().y << ")";
-//							}
-	                        // priorizara partir da distância envio de beacon para nós mais próximos do controlador
-								/* code */
-
 						}
 
-						
+						if (index == -1){
+							nodeCInfo temp;
 
+							temp.time = SIMTIME_DBL(simTime());
+							temp.id = atoi(netPacket->getSource());
+							temp.RE = netPacket->getRE();
+							temp.selfLocation = netPacket->getCurrentLocation();
+							temp.speed = netPacket->getSpeed();
+							temp.trajectory = netPacket->getTraject();
+							temp.selected = false;
+							temp.distController = computeDistance(temp.selfLocation ,controllerList[0].controllerLocation);
 
+							if(temp.id < 7){
+								temp.independent = -100;
+							}else{
+								temp.independent = 1;
+							}
+							nodes.push_back(temp);
 
+						} else{
+							if(nodes[index].id < 7){
+								nodes[index].independent = -1;
+							}else{
+								nodes[index].independent = 1;
+							}
 
+							nodes[index].distController = computeDistance(nodes[index].selfLocation ,controllerList[0].controllerLocation);
+							nodes[index].time = SIMTIME_DBL(simTime());
+							nodes[index].id = atoi(netPacket->getSource());
+							nodes[index].RE = netPacket->getRE();
+							nodes[index].selfLocation = netPacket->getCurrentLocation();
+							nodes[index].speed = netPacket->getSpeed();
+							nodes[index].trajectory = netPacket->getTraject();
+						}
+						// priorizara partir da distância envio de beacon para nós mais próximos do controlador
+						sort(nodes.begin(), nodes.end(), PSO_sort_dist);
 
+						if(nodes.size() >= 10){
 
+							cout << "not independent nodes: ";
+							for (int i = 0; i < nodes.size(); ++i){
+								if(nodes[i].independent < 0){
+									cout << nodes[i].id << " ";									
+								}
+							}
+							cout << endl;
+							cout << "independent nodes: ";
+							for (int i = 0; i < nodes.size(); ++i){
+								if(nodes[i].independent > 0){
+									cout << nodes[i].id << " ";									
+								}
+							}
+							cout << endl;
 
+                    //                          Função de atualização da topologia
+							psoTopology = sdfanet.computeTopology(controllerList[0], nodes);
+                    //                          Atualizando tabela de rotas
+							
 
+							// cout << "MONTANDO MSG 2" << endl;
 
+							route.clear();
 
+							
+							// exit(true);
+                                                // Adicionar rota
+							for (int i = 0; i < nodes.size(); ++i){
+								for (int j = 0; j < psoTopology.routes.size(); ++j){
+									if(nodes[i].id == psoTopology.routes[j].nodeId){
+										route.push_back(psoTopology.routes[j]);
+									}
+								}
+							}
 
+							// cout << "MONTANDO MSG 3" << endl;
+                                                // Modificar location
+							for (int i = 0; i < route.size(); ++i){
+								for (int j = 0; j < psoTopology.relayNodes.size(); ++j){
+									if(route[i].nodeId == psoTopology.relayNodes[j].id){
+										route[i].idealLocation =  psoTopology.relayNodes[j].selfLocation;
+									}
+								}
+							}
+							// trace() << "update routing table line number " << replaceList[value].line;
+							// cout << "MONTANDO MSG 4" << endl;
+							// Enviar rotas
+							for (int i=0; i <= route.size(); i++){
+								char buff[256];
+								string sNodeID;
+								sprintf(buff, "%i", route[i].nodeId);
+								sNodeID.assign(buff);
+								string sNextId;
+								sprintf(buff, "%i", route[i].nextHop);
+								sNextId.assign(buff);
+								route[i].ack = false;
+
+								PSORoutingPacket *advMsg = new PSORoutingPacket("Node is sending an adv msg", NETWORK_LAYER_PACKET);
+								advMsg->setByteLength(netDataFrameOverhead);
+								advMsg->setPSORoutingPacketKind(PSO_RN_MSG);
+								advMsg->setSource(SELF_NETWORK_ADDRESS);
+								advMsg->setDestination(sNodeID.c_str());
+								advMsg->setNextHop(sNodeID.c_str());
+								advMsg->setNextHopRoute(sNextId.c_str());
+								advMsg->setIdealLocation(route[i].idealLocation);
+								advMsg->setSourceRoute(route[i].source);
+								advMsg->setReplacement(false);
+								toMacLayer(advMsg, resolveNetworkAddress(advMsg->getDestination()));
+								trace() << "C_" << self << " is sending a msg to node " << advMsg->getDestination() << " with next-hop " << advMsg->getNextHopRoute() << " to move to (" << advMsg->getIdealLocation().x << ", " << advMsg->getIdealLocation().y << ")";
+							}
+
+						}
 					} else {
 						PSORoutingPacket *dupPacket = netPacket->dup();
 						dupPacket->setNextHop(controllerAddress.c_str());
@@ -334,7 +290,7 @@ void PSORouting::fromMacLayer(cPacket *pkt, int srcMacAddress, double RSSI, doub
 								replaceList[index].ack = true;
 								// trace() << "Updated \n";
 							} 
-						}
+                                                }
 					} else {
 						PSORoutingPacket *dupPacket = netPacket->dup();
 						dupPacket->setNextHop(controllerAddress.c_str());

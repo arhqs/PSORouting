@@ -116,6 +116,7 @@ class PSORouting : public VirtualRouting {
 // //	end
 
 	Sdfanet sdfanet;
+	topology_info_t psoTopology;
 
 	//to LinGO protocol
 	VirtualMobilityManager* mobilityModule;
@@ -137,11 +138,6 @@ class PSORouting : public VirtualRouting {
 	vector <routeCInfo> route;
 
 	vector <nodeCInfo> nodes;
-
-//	added by pedro
-	vector <nodeCInfo> inodes;
-	vector <nodeCInfo> rnodes;
-//	end
 
 	vector <replacementInfo> replaceList;
 	vector <eventInfo> eventList;

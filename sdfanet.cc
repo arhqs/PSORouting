@@ -58,6 +58,10 @@ void Sdfanet::error(const char *msg)
 
 void Sdfanet::send(const char *msg){
     int n;
+    // cout << endl;
+    // cout << "MSG from sdfanet to python: " << msg << endl;
+    // cout << endl;
+
     n = write(this->sockfd,msg,strlen(msg));
     if (n < 0)
          error("ERROR writing to socket");
@@ -70,43 +74,64 @@ void Sdfanet::receive(char *msg){
     while(n == 0){
         bzero(msg,CONST_MAX_BUFFER);
         n = read(this->sockfd,msg,CONST_MAX_BUFFER-1);
-        cout << endl;
-        cout << "READING n FROM SOCKET: " << n << endl;
-        cout << "READING FROM SOCKET: " << *msg << endl;
-        cout << endl;
+        // cout << endl;
+        // cout << "READING FROM SOCKET: " << msg << endl;
+        // cout << endl;
+
     }
     if (n < 0)
          error("ERROR reading from socket");
 
 }
 
-topology_info_t Sdfanet::computeTopology(controllerInfo controllerNode, vector<nodeCInfo> independentNodes, vector<nodeCInfo> relayNodes) {
+topology_info_t Sdfanet::computeTopology(controllerInfo controllerNode, nodes_t nodes) {
 
-    cout << "COMPUTETOPOLOGY 1" << endl;
+    // cout << "COMPUTETOPOLOGY 1" << endl;
+
     stringstream ss;
-
     char buffer[CONST_MAX_BUFFER];
-//    memset(buffer, 0, sizeof(buffer));
+    indexes_t iNodes;
+    indexes_t rNodes;
 
-//    this->receive(buffer);
-    cout << "COMPUTETOPOLOGY 2" << endl;
+    // cout << "COMPUTETOPOLOGY 2" << endl;
 
-    string message = getStdFromInfo(controllerNode, independentNodes, relayNodes);
+    // coleta indexes para relay e independent nodes
+    iNodes = getIndexesFromNode(nodes, true);
+    rNodes = getIndexesFromNode(nodes, false);
 
-    printf("message: %s\n",message.c_str());
+    // cout << "COMPUTETOPOLOGY 3" << endl;
+
+    // computa mensagem já com os indexes separados
+    string message = getStdFromInfo(controllerNode, nodes, iNodes, rNodes);
 
     this->send(message.c_str());
 
     this->receive(buffer);
 
-    printf("buffer: >%s<\n", buffer);
+    // printf("buffer: >%s<\n", buffer);
 
-    topology_info_t topology = getTopologyFromStd(controllerNode, relayNodes, buffer);
-
-
-//    this->send("ack");
+    // computa mensagem recebida
+    topology_info_t topology = getTopologyFromStd(controllerNode, nodes, rNodes, buffer);
 
     return topology;
+}
+
+indexes_t getIndexesFromNode(nodes_t nodes, bool independent){
+    indexes_t indexes;
+	for (int i = 0; i < nodes.size(); ++i){
+        if (independent){
+            if (nodes[i].independent > 0){
+                indexes.push_back(i);
+            }
+        }
+        else{
+            if (nodes[i].independent < 0){
+                indexes.push_back(i);
+            }
+        }
+	}
+    cout << endl;
+	return indexes;
 }
 
 string getStdoutFromCommand(string cmd) {
@@ -125,24 +150,21 @@ string getStdoutFromCommand(string cmd) {
     return data;
 }
 
-string getStdFromInfo(controllerInfo controllerNode, vector<nodeCInfo> independentNodes, vector<nodeCInfo> relayNodes) {
-    cout << "RELAY.LIST_SIZE= " << relayNodes.size() << endl;
-    cout << "INDEPENDENT.LIST_SIZE= " << independentNodes.size() << endl;
+string getStdFromInfo(controllerInfo controllerNode, nodes_t nodes, indexes_t iNodes, indexes_t rNodes) {
 
     stringstream ss;
 
-
-    ss << "{" << getStdFromController(controllerNode, "C") << "," << getStdFromNode(relayNodes, "RU") << "," << getStdFromNode(independentNodes, "MU") << "}";
+    ss << "{" << getStdFromController(controllerNode, "C") << "," << getStdFromNode(nodes, rNodes, "RU") << "," << getStdFromNode(nodes, iNodes, "MU") << "}";
 
     return ss.str();
 }
 
-string getStdFromNode(vector<nodeCInfo> nodes, string name) {
+string getStdFromNode(nodes_t nodes, indexes_t indexes, string name){
     stringstream ss;
     stringstream positions;
     stringstream names;
 
-    unsigned n = unsigned(nodes.size());
+    unsigned n = unsigned(indexes.size());
 
     // cout << "NODES.SIZE(): " << nodes.size() << endl;
     // cout << "NAME: " << name << endl;
@@ -153,12 +175,12 @@ string getStdFromNode(vector<nodeCInfo> nodes, string name) {
             names << ",";
         }
         positions << "[";
-        positions << nodes.at(i).selfLocation.x;
+        positions << nodes.at(indexes.at(i)).selfLocation.x;
         positions << ",";
-        positions << nodes.at(i).selfLocation.y;
+        positions << nodes.at(indexes.at(i)).selfLocation.y;
         positions << "]";
         names << "\"";
-        names << to_string(nodes.at(i).id);
+        names << to_string(nodes.at(indexes.at(i)).id);
         names << "\"";
     }
 
@@ -185,9 +207,9 @@ string getStdFromController(controllerInfo controllerNode, string name) {
     return ss.str();
 }
 
-topology_info_t getTopologyFromStd(controllerInfo controllerNode, vector<nodeCInfo> relayNodes, string message){
+topology_info_t getTopologyFromStd(controllerInfo controllerNode, nodes_t nodes, indexes_t rNodes, string message){
 
-    printf("getTopologyFromStd init\n");
+    // printf("getTopologyFromStd init\n");
 
     char delim1 = ']';
     char delim2 = ',';
@@ -219,25 +241,36 @@ topology_info_t getTopologyFromStd(controllerInfo controllerNode, vector<nodeCIn
 //    cout << stringsConIn.at(1) << endl;
     controllerNode.controllerLocation.y = stod(stringsConIn.at(1));
 
-    printf("getTopologyFromStd 1\n");
+    // printf("getTopologyFromStd 1\n");
     
+    cout << "RELAYNODES.SIZE(): " << rNodes.size() << endl;
 
-    cout << "RELAYNODES.SIZE(): " << relayNodes.size() << endl;
-    cout << "STRINGSPOS.SIZE(): " << stringsPos.size() << endl;
+    nodes_t result_nodes;
+    topology_info_t topology;
+
+    for (int i = 0; i < rNodes.size(); ++i) {
+
+        //cout << stringsPos.at(i) << endl;
+
+        strings_t stringsPosIn = split(stringsPos[i], delim2, 0, 1);
 
 
-    for (int i = 0; i < relayNodes.size(); ++i) {
-        cout << stringsPos.at(i) << endl;
+        nodeCInfo result_node;
+        PSOLocationInfo location;
 
+        location.x = stod(stringsPosIn.at(0));
+        location.y = stod(stringsPosIn.at(1));
 
-        strings_t stringsPosIn = split(stringsPos.at(i), delim2, 0, 1);
+        result_node.id = nodes[rNodes[i]].id;
+        result_node.selfLocation = location;
 
-        cout << stringsPosIn.at(0) << endl;
-        cout << stringsPosIn.at(1) << endl;
+        result_nodes.push_back(result_node);
 
-        relayNodes.at(i).selfLocation.x = stod(stringsPosIn.at(0));
-        relayNodes.at(i).selfLocation.y = stod(stringsPosIn.at(1));
+        topology.relayNodes.push_back(result_node);
+        // cout << "stringsPosIn: " << stringsPosIn.at(0) << "," <<  stringsPosIn.at(1) << endl;
+        
     }
+    // printf("getTopologyFromStd 1\n");
 
     routes_t routes;
     string::size_type sz;
@@ -249,12 +282,11 @@ topology_info_t getTopologyFromStd(controllerInfo controllerNode, vector<nodeCIn
         route.nextHop = stoi(stringsRouIn.at(1), &sz);
         route.destination = stoi(stringsRouIn.at(2), &sz);
         routes.push_back(route);
+        topology.routes.push_back(route);
     }
 
-    topology_info_t topology;
-
-    topology.relayNodes = relayNodes;
-    topology.routes = routes;
+    // topology.relayNodes = result_nodes;
+    // topology.routes = routes;
 
 
     return topology;

@@ -18,11 +18,6 @@
 
 using namespace std;
 
-typedef vector<string> strings_t;
-typedef vector <nodeCInfo> nodes_t;
-typedef vector <routeCInfo> routes_t;
-typedef int name_t;
-
 typedef struct topologyInfo {
     controllerInfo controllerNode;
     nodes_t relayNodes;
@@ -39,14 +34,15 @@ private:
 public:
     Sdfanet();
     void connectMain();
-    topology_info_t computeTopology(controllerInfo controllerNode, nodes_t independentNodes, nodes_t relayNodes);
+    topology_info_t computeTopology(controllerInfo controllerNode, nodes_t nodes);
 };
 
+indexes_t getIndexesFromNode(nodes_t nodes, bool independent);
 string getStdoutFromCommand(string cmd);
 string getStdFromController(controllerInfo controllerNode, string name);
-string getStdFromInfo(controllerInfo controllerNode, nodes_t independentNodes, nodes_t relayNodes);
-string getStdFromNode(nodes_t nodes, string name);
-topology_info_t getTopologyFromStd(controllerInfo controllerNode, nodes_t relayNodes, string message);
+string getStdFromNode(nodes_t nodes, indexes_t indexes, string name);
+string getStdFromInfo(controllerInfo controllerNode, nodes_t nodes, indexes_t iNodes, indexes_t rNodes);
+topology_info_t getTopologyFromStd(controllerInfo controllerNode, nodes_t nodes, indexes_t rNodes, string message);
 strings_t split (const string &s, char delim, int c_first = 0, int c_others = 0);
 
 #endif // COMMAND_H
